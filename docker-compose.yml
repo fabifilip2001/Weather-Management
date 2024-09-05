@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_container
+    environment:
+      POSTGRES_DB: meteo
+      POSTGRES_USER: admin_meteo
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - postgres_api_network
+      - postgres_pgadmin_network
+
+  meteo_api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      DB_USERNAME: admin_meteo
+      DB_PASSWORD: admin
+      DB_HOST: postgres_container
+      DB_PORT: 5432
+      DB_NAME: meteo
+    ports:
+      - "6000:6000"
+    networks:
+      - postgres_api_network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: meteo_admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:     
+      - "5050:80"
+    networks:
+      - postgres_pgadmin_network
+
+networks:
+  postgres_api_network:
+  postgres_pgadmin_network:
+
+volumes:
+  postgres_data:
+    driver: local
